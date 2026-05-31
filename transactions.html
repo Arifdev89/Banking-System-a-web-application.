@@ -1,0 +1,122 @@
+{% extends 'banking/base.html' %}
+{% block title %}Transaction History - NeoBank{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .filter-btn {
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-family: 'DM Sans', sans-serif;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .summary-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .summary-item {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+    }
+    .summary-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .summary-value { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; }
+    @media (max-width: 600px) { .summary-bar { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Transaction History</h1>
+
+<div class="summary-bar">
+    <div class="summary-item">
+        <div class="summary-label">Total Transactions</div>
+        <div class="summary-value">{{ transactions|length }}</div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-label">Current Balance</div>
+        <div class="summary-value" style="color: var(--accent);">₹{{ account.balance }}</div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-label">Account Number</div>
+        <div class="summary-value" style="font-size: 1rem;">{{ account.account_number }}</div>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <button class="filter-btn active" onclick="filterTxn('all', this)">All</button>
+    <button class="filter-btn" onclick="filterTxn('DEPOSIT', this)">Deposits</button>
+    <button class="filter-btn" onclick="filterTxn('WITHDRAW', this)">Withdrawals</button>
+    <button class="filter-btn" onclick="filterTxn('TRANSFER_IN', this)">Transfer In</button>
+    <button class="filter-btn" onclick="filterTxn('TRANSFER_OUT', this)">Transfer Out</button>
+</div>
+
+<div class="card">
+    {% if transactions %}
+    <table id="txnTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Balance After</th>
+                <th>Date & Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in transactions %}
+            <tr data-type="{{ txn.transaction_type }}">
+                <td style="color: var(--muted); font-size: 0.8rem;">{{ forloop.counter }}</td>
+                <td>
+                    {% if txn.transaction_type == 'DEPOSIT' %}<span class="badge badge-green">Deposit</span>
+                    {% elif txn.transaction_type == 'WITHDRAW' %}<span class="badge badge-red">Withdraw</span>
+                    {% elif txn.transaction_type == 'TRANSFER_IN' %}<span class="badge badge-purple">Transfer In</span>
+                    {% else %}<span class="badge badge-yellow">Transfer Out</span>{% endif %}
+                </td>
+                <td style="color: var(--muted);">{{ txn.description }}</td>
+                <td>
+                    {% if txn.transaction_type == 'DEPOSIT' or txn.transaction_type == 'TRANSFER_IN' %}
+                    <span style="color: var(--accent); font-weight: 500;">+₹{{ txn.amount }}</span>
+                    {% else %}
+                    <span style="color: var(--danger); font-weight: 500;">-₹{{ txn.amount }}</span>
+                    {% endif %}
+                </td>
+                <td style="font-weight: 500;">₹{{ txn.balance_after }}</td>
+                <td style="color: var(--muted); font-size: 0.85rem;">{{ txn.created_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: var(--muted);">No transactions found.</div>
+    {% endif %}
+</div>
+
+<script>
+function filterTxn(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#txnTable tbody tr').forEach(row => {
+        row.style.display = (type === 'all' || row.dataset.type === type) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}
