@@ -1,0 +1,83 @@
+{% extends 'banking/base.html' %}
+{% block title %}Dashboard - NeoBank{% endblock %}
+
+{% block extra_css %}
+<style>
+    .balance-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border: 1px solid rgba(0,229,160,0.2);
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .balance-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .balance-amount { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--accent); margin-bottom: 1rem; }
+    .acc-info { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .acc-info-item { font-size: 0.85rem; color: var(--muted); }
+    .acc-info-item strong { display: block; color: var(--text); font-size: 0.95rem; margin-top: 0.2rem; }
+    .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .action-btn { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+    .action-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .action-icon { font-size: 1.5rem; }
+    .action-label { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="balance-card">
+    <div class="balance-label">Total Balance</div>
+    <div class="balance-amount">₹{{ account.balance }}</div>
+    <div class="acc-info">
+        <div class="acc-info-item">Account Number<strong>{{ account.account_number }}</strong></div>
+        <div class="acc-info-item">Account Holder<strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+        <div class="acc-info-item">Member Since<strong>{{ account.created_at|date:"M Y" }}</strong></div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <a href="{% url 'deposit' %}" class="action-btn"><div class="action-icon">💰</div><div class="action-label">Deposit</div></a>
+    <a href="{% url 'withdraw' %}" class="action-btn"><div class="action-icon">💸</div><div class="action-label">Withdraw</div></a>
+    <a href="{% url 'transfer' %}" class="action-btn"><div class="action-icon">🔁</div><div class="action-label">Transfer</div></a>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <div class="section-title">Recent Transactions</div>
+        <a href="{% url 'transactions' %}" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">View All</a>
+    </div>
+    {% if transactions %}
+    <table>
+        <thead>
+            <tr><th>Type</th><th>Description</th><th>Amount</th><th>Balance After</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for txn in transactions %}
+            <tr>
+                <td>
+                    {% if txn.transaction_type == 'DEPOSIT' or txn.transaction_type == 'TRANSFER_IN' %}
+                    <span class="badge badge-green">{{ txn.get_transaction_type_display }}</span>
+                    {% else %}
+                    <span class="badge badge-red">{{ txn.get_transaction_type_display }}</span>
+                    {% endif %}
+                </td>
+                <td style="color: var(--muted);">{{ txn.description }}</td>
+                <td>
+                    {% if txn.transaction_type == 'DEPOSIT' or txn.transaction_type == 'TRANSFER_IN' %}
+                    <span style="color: var(--accent);">+₹{{ txn.amount }}</span>
+                    {% else %}
+                    <span style="color: var(--danger);">-₹{{ txn.amount }}</span>
+                    {% endif %}
+                </td>
+                <td>₹{{ txn.balance_after }}</td>
+                <td style="color: var(--muted); font-size: 0.85rem;">{{ txn.created_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 2rem; color: var(--muted);">No transactions yet. Make your first deposit!</div>
+    {% endif %}
+</div>
+{% endblock %}
