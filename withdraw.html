@@ -1,0 +1,38 @@
+{% extends 'banking/base.html' %}
+{% block title %}Withdraw - NeoBank{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-wrap { max-width: 480px; }
+    .balance-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255,79,106,0.1); border: 1px solid rgba(255,79,106,0.2); color: var(--danger); padding: 0.4rem 0.9rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; margin-bottom: 1.5rem; }
+    .quick-amounts { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .qa-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 0.4rem 0.9rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+    .qa-btn:hover { border-color: var(--danger); color: var(--danger); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <h1 class="page-title">Withdraw Money</h1>
+    <div class="balance-tag">💸 Available Balance: ₹{{ account.balance }}</div>
+    <div class="card">
+        <div class="quick-amounts">
+            <span style="font-size: 0.8rem; color: var(--muted); width: 100%; margin-bottom: 0.25rem;">Quick amounts:</span>
+            <button class="qa-btn" onclick="setAmount(500)">₹500</button>
+            <button class="qa-btn" onclick="setAmount(1000)">₹1,000</button>
+            <button class="qa-btn" onclick="setAmount(5000)">₹5,000</button>
+            <button class="qa-btn" onclick="setAmount(10000)">₹10,000</button>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" name="amount" id="amountInput" placeholder="Enter amount" min="1" step="0.01" required>
+            </div>
+            <button type="submit" class="btn btn-danger btn-full">Withdraw Now</button>
+        </form>
+    </div>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline" style="margin-top: 1rem;">← Back</a>
+</div>
+<script>function setAmount(val) { document.getElementById('amountInput').value = val; }</script>
+{% endblock %}
